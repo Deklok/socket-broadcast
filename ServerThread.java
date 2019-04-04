@@ -1,13 +1,18 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
+import java.util.concurrent.BlockingDeque;
 
 public class ServerThread extends Thread {
     private Socket clientSocket;
     private final int PORT = 1234;
     private String Group = "224.0.0.1";
     private byte TTL = 3;
+    private BlockingDeque colaMensajes;
+    private BufferedReader inClient;
     
     public ServerThread (Socket socket) {
         this.clientSocket = socket;
@@ -18,14 +23,51 @@ public class ServerThread extends Thread {
 
     @Override
     public void run() {
-        System.out.println("Iniciando thread");
         try {
-            String lol = "Tu mama hehe xd";
-            MulticastSocket ms = new MulticastSocket();
-            byte buf[] = new byte[1024];
-            DatagramPacket pack = new DatagramPacket(lol.getBytes(), lol.length(), InetAddress.getByName(Group), PORT);
-            ms.send(pack,TTL);
-            //ms.close();
+            Thread threadEscucha = new Thread() {
+                @Override
+                public void run() {
+                    System.out.println("Iniciando thread escucha");
+                    try {
+                        inClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                        while (true) {
+                            String msg = inClient.readLine();
+                            System.out.println("Mensaje recibido: " + msg);
+                            colaMensajes.addLast(msg);
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            };
+            
+            Thread threadPublica = new Thread() {
+                @Override
+                public void run() {
+                    System.out.println("Iniciando thread publicacion");
+                    try {
+                        String msg;
+                        MulticastSocket ms = new MulticastSocket();
+                        byte buf[] = new byte[1024];
+                        DatagramPacket pack;
+                        while (true) {
+                            msg = ".";
+                            if (!colaMensajes.isEmpty()) {
+                                msg = colaMensajes.takeFirst();
+                            }
+                            pack = new DatagramPacket(msg.getBytes(), msg.length(),
+                                    InetAddress.getByName(Group), PORT);
+                            ms.send(pack, TTL);
+                            // ms.close();
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            };
+            
+            threadEscucha.start();
+            threadPublica.start();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
