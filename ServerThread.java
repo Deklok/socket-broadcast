@@ -5,17 +5,20 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 public class ServerThread extends Thread {
     private Socket clientSocket;
     private final int PORT = 1234;
     private String Group = "224.0.0.1";
     private byte TTL = 3;
-    private BlockingDeque colaMensajes;
+    private LinkedBlockingDeque colaMensajes;
     private BufferedReader inClient;
     
-    public ServerThread (Socket socket) {
+    public ServerThread (Socket socket, LinkedBlockingDeque cola) {
         this.clientSocket = socket;
+        this.colaMensajes = cola;
     }
 
     public ServerThread() {
@@ -53,12 +56,12 @@ public class ServerThread extends Thread {
                         while (true) {
                             msg = ".";
                             if (!colaMensajes.isEmpty()) {
-                                msg = colaMensajes.takeFirst();
+                                msg = (String)colaMensajes.pollFirst();
                             }
                             pack = new DatagramPacket(msg.getBytes(), msg.length(),
                                     InetAddress.getByName(Group), PORT);
                             ms.send(pack, TTL);
-                            // ms.close();
+                            TimeUnit.SECONDS.sleep(5);
                         }
                     } catch (Exception ex) {
                         ex.printStackTrace();

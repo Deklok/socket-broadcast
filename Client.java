@@ -17,15 +17,19 @@ public class Client {
     // Para almacenar el contenido de los mensjaes
     private static String msg = "", msgIn = "";
     private static final String GROUP = "224.0.0.1";
+    private static Socket serverSocket;
 
     public static void main(String[] args) {
         System.out.println("Abriendo puerto \n");
         try {
             host = InetAddress.getLocalHost();
             // obtener la dirección IP del Servidor
+            serverSocket = new Socket(InetAddress.getLocalHost(),5000);
         } catch (UnknownHostException e) {
             System.out.println("Error al abrir el puerto!");
             System.exit(1);
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
         try {
