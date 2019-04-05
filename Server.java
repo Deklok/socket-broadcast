@@ -40,6 +40,7 @@ public class Server {
                             }
                         }
                         pack = new DatagramPacket(msg.getBytes(), msg.length(), InetAddress.getByName(Group), PORT);
+                        System.out.println("Enviando mensaje multicast: " + msg);
                         ms.send(pack, TTL);
                         sleep(10000);
                     }

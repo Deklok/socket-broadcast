@@ -29,7 +29,7 @@ public class ServerThread extends Thread {
             inClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             while (true) {
                 String msg = inClient.readLine();
-                System.out.println("Mensaje recibido: " + msg);
+                //System.out.println("Mensaje recibido: " + msg);
                 if (msg!=null) {
                     colaMensajes.addLast(msg);
                 }
