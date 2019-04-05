@@ -7,15 +7,8 @@ public class Client {
     // IP del Servidor
     private static InetAddress host;
     // Puerto del servidor
-    private static final int PORT = 1234;
-    // Socket Datagram
-    private static DatagramSocket dgramSocket;
-    // Paquetes de entrada y salida
-    private static DatagramPacket inPkt, outPkt;
-    // Buffer de los paquetes
-    private static byte[] buff;
-    // Para almacenar el contenido de los mensjaes
-    private static String msg = "", msgIn = "";
+    private static final int RECEIVERPORT = 1234;
+    private static final int SENDERPORT = 5000;
     private static final String GROUP = "224.0.0.1";
     private static Socket serverSocket;
 
@@ -24,49 +17,44 @@ public class Client {
         try {
             host = InetAddress.getLocalHost();
             // obtener la dirección IP del Servidor
-            serverSocket = new Socket(InetAddress.getLocalHost(),5000);
+            serverSocket = new Socket(InetAddress.getLocalHost(), SENDERPORT);
         } catch (UnknownHostException e) {
             System.out.println("Error al abrir el puerto!");
             System.exit(1);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        new Thread(new ClientReceiverThread(RECEIVERPORT, GROUP)).start();
+        run();
+    }
 
+    private static void run() {
         try {
 
-            MulticastSocket ms = new MulticastSocket(PORT);
-            ms.joinGroup(InetAddress.getByName(GROUP));
-            // Crear el socket datagrama
-            dgramSocket = new DatagramSocket();
+            // Crear el lector y escritor de socket
+            BufferedReader in = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()));
+            PrintWriter out = new PrintWriter(serverSocket.getOutputStream(), true);
+            // Configurar para la entrada del suario
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            // Almacenamiento para el mensaje y respuesta
+            String msgOut;
+
             do {
-                /*allocate the packet buffer*/
-                byte buf[] = new byte[1024];
-                /*create the packet*/
-                DatagramPacket pack =
-                new DatagramPacket(buf, buf.length);
-                /*receive a packet from the multicast socket*/
-                ms.receive(pack);
-                /* print the details of the sender (server) */
-                System.out.println("Received data from: " + pack.getAddress().toString() + ":" + pack.getPort() + " with length: " + pack.getLength());
-                /* print the message */
-                String entrada = new String(pack.getData(),0,pack.getLength());
-                System.out.println("SERVIDOR > " + entrada);
+                System.out.println("Mi mensaje > ");
+                // Leer mensaje del usuario
+                msgOut = reader.readLine();
+                // Enviar el mensaje
+                out.println(msgOut);
             } while (true);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            // Cerrar el socket yliberar sus recursos
-        }
-    }
-
-    private static void run() {
-    }
-
-    public class ReceiverThread implements Runnable {
-
-        @Override
-        public void run() {
-
+            // Cerrar el socket de datos
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

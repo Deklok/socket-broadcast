@@ -15,8 +15,8 @@ public class ServerThread extends Thread {
     private byte TTL = 3;
     private LinkedBlockingDeque colaMensajes;
     private BufferedReader inClient;
-    
-    public ServerThread (Socket socket, LinkedBlockingDeque cola) {
+
+    public ServerThread(Socket socket, LinkedBlockingDeque cola) {
         this.clientSocket = socket;
         this.colaMensajes = cola;
     }
@@ -43,7 +43,7 @@ public class ServerThread extends Thread {
                     }
                 }
             };
-            
+
             Thread threadPublica = new Thread() {
                 @Override
                 public void run() {
@@ -54,21 +54,20 @@ public class ServerThread extends Thread {
                         byte buf[] = new byte[1024];
                         DatagramPacket pack;
                         while (true) {
-                            msg = ".";
+                            msg = "Server heartbeat";
                             if (!colaMensajes.isEmpty()) {
-                                msg = (String)colaMensajes.pollFirst();
+                                msg = (String) colaMensajes.pollFirst();
                             }
-                            pack = new DatagramPacket(msg.getBytes(), msg.length(),
-                                    InetAddress.getByName(Group), PORT);
+                            pack = new DatagramPacket(msg.getBytes(), msg.length(), InetAddress.getByName(Group), PORT);
                             ms.send(pack, TTL);
-                            TimeUnit.SECONDS.sleep(5);
+                            sleep(10000);
                         }
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
                 }
             };
-            
+
             threadEscucha.start();
             threadPublica.start();
         } catch (Exception ex) {
